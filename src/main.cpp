@@ -1,16 +1,13 @@
+/* De sensoren staan op de volgorde 4  2  1  3  5
+
+
+                                          6 
+*/ 
 #include <Arduino.h>
 
-// Variables will change:
-int ledState = HIGH;         // the current state of the output pi
-int buttonState;             // the current reading from the input pin
-int lastButtonState = LOW;   // the previous reading from the input pin
 int rechtsom = 0;
 int linksom = 0;
 int stopcount = 0;
-
-const int rgbLedPinRed = 47;                         // rgb led red
-const int rgbLedPinGreen = 45;                      // rgb led green
-const int rgbLedPinBlue = 46;                       // rgb led blue
 
 #define DS1 22
 #define DS2 24
@@ -25,25 +22,31 @@ int start = 0;
 
 int s1, s2, s3, s4, s5, s6;
 
-void red(){
-  digitalWrite(rgbLedPinRed, LOW);
-  digitalWrite(rgbLedPinGreen, HIGH);
-  digitalWrite(rgbLedPinBlue, HIGH);
+//start functie hij begint niet zonder dat dit waar is 
+void Start(){
+  
+  stop();
+  while(start == 0){
+statesensoren();
+    if ((s2 == bl) && (s3 == bl) && (s1 == bl) && (s4 == wh) && (s5 == wh)){
+      start = 1;
+    }
+    else{
+     Serial.println("De auto is een imbeciel");
+     delay(10);
+     
+    }
+  }
 }
-void green(){
-  digitalWrite(rgbLedPinRed, HIGH);
-  digitalWrite(rgbLedPinGreen, LOW);
-  digitalWrite(rgbLedPinBlue, HIGH);
-}
-void blue(){
-  digitalWrite(rgbLedPinRed, HIGH);
-  digitalWrite(rgbLedPinGreen, HIGH);
-  digitalWrite(rgbLedPinBlue, LOW);
+
+void stop() {
+  Serial.println("auto stopt");
+  digitalWrite(9, HIGH);
+  digitalWrite(8, HIGH);
 }
 
 void straight() {
   Serial.println("Driving straight");
-  green();
   //Driving forward
   //Motor A forward @ full speed
     digitalWrite(12, HIGH); //Establishes forward direction of Channel A
@@ -54,7 +57,6 @@ void straight() {
     digitalWrite(13, HIGH);  //Establishes forward direction of Channel B
     digitalWrite(8, LOW);   //Disengage the Brake for Channel B
     analogWrite(11, 255);    //Spins the motor on Channel B at full speed
-    digitalWrite(rgbLedPinGreen, LOW);
 }
 
 void right() {
@@ -71,7 +73,6 @@ void right() {
     analogWrite(11, 255);    //Spins the motor on Channel B at full speed backward
 }
 
-
 void left() {
   Serial.println("Gaat naar links");
   //Driving left
@@ -87,101 +88,44 @@ void left() {
 }
   
 
-
-void stop() {
-  red();
-  digitalWrite(9, HIGH);
-  digitalWrite(8, HIGH);
+void correctierechts(){
+     //correctie rechts
+    if(s3 == bl){
+      Serial.println("corrigeert naar rechts");
+      analogWrite(3, 20);     //Spins the motor on Channel A at full speed 
+      digitalWrite(12, HIGH);  //Establishes forward direction of Channel A
+    
+      analogWrite(11, 255);     //Spins the motor on Channel B at full speed forward
+      digitalWrite(13, HIGH);  //Establishes forward direction of Channel B
+      }
 }
+void correctielinks(){
+ //correctie links
+    
+    if(s2 == bl){
+      Serial.println("corrigeert naar rechts");
+      analogWrite(3, 255);     //Spins the motor on Channel A at full speed 
+      digitalWrite(12, HIGH);  //Establishes forward direction of Channel A
 
-//start functie hij begint niet zonder dat dit waar is 
-void Start(){
-  stop();
-  while(start == 0){
-s1 = digitalRead(DS1);
-s2 = digitalRead(DS2);
-s3 = digitalRead(DS3);
-s4 = digitalRead(DS4);
-s5 = digitalRead(DS5);
-s6 = digitalRead(DS6);
-    if ((s2 == bl) && (s3 == bl) && (s1 == bl) && (s4 == wh) && (s5 == wh)){
-      start = 1;
+      analogWrite(11, 20);     //Spins the motor on Channel B at full speed forward
+      digitalWrite(13, HIGH);  //Establishes forward direction of Channel B
     }
-    else{
-     Serial.println("De auto is een imbeciel");
-     delay(10);
-     
-    }
-  }
 }
 
-
-void setup() {
-  //Setup Channel A
-  pinMode(12, OUTPUT); //Initiates Motor Channel A pin
-  pinMode(9, OUTPUT); //Initiates Brake Channel A pin
-
-  //Setup Channel B
-  pinMode(13, OUTPUT); //Initiates Motor Channel A pi
-  pinMode(8, OUTPUT);  //Initiates Brake Channel A pin
-
-  //Setup sensor
-  pinMode(DS1, INPUT);
-  pinMode(DS2, INPUT);
-  pinMode(DS3, INPUT);
-  pinMode(DS4, INPUT);
-  pinMode(DS5, INPUT);
-  pinMode(DS6, INPUT);
-  
-  pinMode(rgbLedPinRed, OUTPUT);
-  pinMode(rgbLedPinGreen, OUTPUT);
-  pinMode(rgbLedPinBlue, OUTPUT);
-  
-  Serial.begin(9600); //Starts the serial monitor
-
-
-Start();
-
-
-}
-
-void loop(){
-  // assigns signal 1-6 from digital sensor 1-6
-s1 = digitalRead(DS1);
-s2 = digitalRead(DS2);
-s3 = digitalRead(DS3);
-s4 = digitalRead(DS4);
-s5 = digitalRead(DS5);
-s6 = digitalRead(DS6);
-
-//tijdelijke straight
-
-straight();
-
- //rechts af
+void rechtsaf(){
+  //rechts af
   if (s5 == bl){//rechter sensor 
 
   delay(5); // delay voor 2e lezing
-    s6 = digitalRead(DS6);
-    s5 = digitalRead(DS5);
-    s4 = digitalRead(DS4);
-    s3 = digitalRead(DS3);
-    s2 = digitalRead(DS2);
-    s1 = digitalRead(DS1);
+   statesensoren();
 
     //kijken of het alsnog pauze of stop is 
     if(s4 == bl){// hij is nu pauze
     Serial.println("pauze");
       delay(350);
       stop();
-      blue();
       delay(5100);
-    s6 = digitalRead(DS6);
-    s5 = digitalRead(DS5);
-    s4 = digitalRead(DS4);
-    s3 = digitalRead(DS3);
-    s2 = digitalRead(DS2);
-    s1 = digitalRead(DS1);
+    statesensoren();
       if((s4 == bl) && (s5 == bl)){
           Serial.println("hij staat nu in zijn stop");
           stopcount = 1;
@@ -210,38 +154,23 @@ straight();
         stop();
     }
   }
-    s6 = digitalRead(DS6);
-    s5 = digitalRead(DS5);
-    s4 = digitalRead(DS4);
-    s3 = digitalRead(DS3);
-    s2 = digitalRead(DS2);
-    s1 = digitalRead(DS1);
+}
 
-  // linker af
+void linksaf(){
+  // links af
  if (s4 == bl){//rechter sensor
     //1e stap hij moet door rijden totdat sensor 6 wit is
     Serial.println("Ik ben een imbiciel");
     delay(5); // delay voor 2e lezing
-    s6 = digitalRead(DS6);
-    s5 = digitalRead(DS5);
-    s4 = digitalRead(DS4);
-    s3 = digitalRead(DS3);
-    s2 = digitalRead(DS2);
-    s1 = digitalRead(DS1);
+    statesensoren();
     
     //kijken of het alsnog pauze of stop is 
     if(s5 == bl){// hij is nu pauze
       Serial.println("pauze");
       delay(350);
       stop();
-      blue();
       delay(5100);
-      s6 = digitalRead(DS6);
-      s5 = digitalRead(DS5);
-      s4 = digitalRead(DS4);
-      s3 = digitalRead(DS3);
-      s2 = digitalRead(DS2);
-      s1 = digitalRead(DS1);
+      statesensoren();
       if((s4 == bl) && (s5 == bl)){
           Serial.println("hij staat nu in zijn stop");
           stopcount = 1;
@@ -269,15 +198,19 @@ straight();
       stop();
    }
   }
+  }
+
+void statesensoren(){
     s6 = digitalRead(DS6);
     s5 = digitalRead(DS5);
     s4 = digitalRead(DS4);
     s3 = digitalRead(DS3);
     s2 = digitalRead(DS2);
     s1 = digitalRead(DS1);
+}
 
-
-if(stopcount == 1){
+ void countstop(){
+   if(stopcount == 1){
 s1 = digitalRead(DS1);
 while(s1 == bl){
      digitalWrite(12, HIGH); //Establishes forward direction of Channel A
@@ -296,32 +229,51 @@ while (stopcount == 1)
   Serial.println("hij is aan het einde van het traject");
 }
 }
-    s6 = digitalRead(DS6);
-    s5 = digitalRead(DS5);
-    s4 = digitalRead(DS4);
-    s3 = digitalRead(DS3);
-    s2 = digitalRead(DS2);
-    s1 = digitalRead(DS1);
+}
+
+void setup() {
+  //Setup Channel A
+  pinMode(12, OUTPUT); //Initiates Motor Channel A pin
+  pinMode(9, OUTPUT); //Initiates Brake Channel A pin
+
+  //Setup Channel B
+  pinMode(13, OUTPUT); //Initiates Motor Channel A pi
+  pinMode(8, OUTPUT);  //Initiates Brake Channel A pin
+
+  //Setup sensor
+  pinMode(DS1, INPUT);
+  pinMode(DS2, INPUT);
+  pinMode(DS3, INPUT);
+  pinMode(DS4, INPUT);
+  pinMode(DS5, INPUT);
+  pinMode(DS6, INPUT);
+  
+  Serial.begin(9600); //Starts the serial monitor
+
+Start();
+
+}
+
+void loop(){
+
+  // assigns signal 1-6 from digital sensor 1-6
+statesensoren();
+
+//tijdelijke straight
+straight();
+
+rechtsaf();
+statesensoren();
+linksaf();
+statesensoren();
+
+countstop();
+
+statesensoren();
 
 
+correctielinks();
 
- //correctie links
+correctierechts();
 
-    if(s2 == bl){
-      analogWrite(3, 255);     //Spins the motor on Channel A at full speed 
-      digitalWrite(12, HIGH);  //Establishes forward direction of Channel A
-
-      analogWrite(11, 20);     //Spins the motor on Channel B at full speed forward
-      digitalWrite(13, HIGH);  //Establishes forward direction of Channel B
-    }
-
-//correctie rechts
-
-    if(s3 == bl){
-      analogWrite(3, 20);     //Spins the motor on Channel A at full speed 
-      digitalWrite(12, HIGH);  //Establishes forward direction of Channel A
-    
-      analogWrite(11, 255);     //Spins the motor on Channel B at full speed forward
-      digitalWrite(13, HIGH);  //Establishes forward direction of Channel B
-      }
 }
