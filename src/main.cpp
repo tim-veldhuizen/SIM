@@ -5,6 +5,7 @@
 */ 
 #include <Arduino.h>
 
+
 int rechtsom = 0;
 int linksom = 0;
 int stopcount = 0;
@@ -88,7 +89,7 @@ void left() {
 }
   
 
-void correctierechts(){
+void checkcorrectierechts(){
      //correctie rechts
     if(s3 == bl){
       Serial.println("corrigeert naar rechts");
@@ -99,7 +100,7 @@ void correctierechts(){
       digitalWrite(13, HIGH);  //Establishes forward direction of Channel B
       }
 }
-void correctielinks(){
+void checkcorrectielinks(){
  //correctie links
     
     if(s2 == bl){
@@ -112,7 +113,7 @@ void correctielinks(){
     }
 }
 
-void rechtsaf(){
+void checkrechtsaf(){
   //rechts af
   if (s5 == bl){//rechter sensor 
 
@@ -156,7 +157,7 @@ void rechtsaf(){
   }
 }
 
-void linksaf(){
+void checklinksaf(){
   // links af
  if (s4 == bl){//rechter sensor
     //1e stap hij moet door rijden totdat sensor 6 wit is
@@ -251,7 +252,6 @@ void setup() {
   Serial.begin(9600); //Starts the serial monitor
 
 Start();
-
 }
 
 void loop(){
@@ -262,18 +262,16 @@ statesensoren();
 //tijdelijke straight
 straight();
 
-rechtsaf();
+checkrechtsaf(); //Als sensor 5 black ziet
 statesensoren();
-linksaf();
+checklinksaf();
 statesensoren();
 
 countstop();
 
 statesensoren();
 
+checkcorrectielinks();
 
-correctielinks();
-
-correctierechts();
-
+checkcorrectierechts();
 }
